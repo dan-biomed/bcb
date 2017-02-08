@@ -3,10 +3,10 @@
 
 ##First check for structures and dimensions of the 2 files.
 
-$ awk -F "\t" '{print NF; exit}' fang_et_al_genotypes.txt				####inspect number of columns in fang_et_al_genotypes.txt, which there are 986
+$ awk -F "\t" '{print NF; exit}' fang_et_al_genotypes.txt				#### inspect number of columns in fang_et_al_genotypes.txt, which there are 986
 986
 
-$ awk -F "\t" '{print NF; exit}' snp_position.txt					####inspect number of columns in snp_position.txt, which there are 15
+$ awk -F "\t" '{print NF; exit}' snp_position.txt					#### inspect number of columns in snp_position.txt, which there are 15
 15
 
 
@@ -14,16 +14,16 @@ $ awk -F "\t" '{print NF; exit}' snp_position.txt					####inspect number of colu
 # Data Processing
 
 
-$ grep -v "^#" snp_position.txt | cut -f 1,3,4 > snp_positions_cut_columns.txt		####since only interested in SNP_ID, Chromosome, and position, cut these columns to new file to be joined
+$ grep -v "^#" snp_position.txt | cut -f 1,3,4 > snp_positions_cut_columns.txt		#### since only interested in SNP_ID, Chromosome, and position, cut these columns to new file to be joined
 
-$ grep -v "^#" fang_et_al_genotypes.txt | cut -f 3-986 > fang_cut_columns.txt		####From the assignment it wasn't clear if Sample ID needed to be kept, but this line will allow the files (after trasposition) to line up on column 1, with matching SNP_ID
+$ grep -v "^#" fang_et_al_genotypes.txt | cut -f 3-986 > fang_cut_columns.txt		#### From the assignment it wasn't clear if Sample ID needed to be kept, but this line will allow the files (after trasposition) to line up on column 1, with matching SNP_ID
  
 
-####I could transpose at this point, but it seems to me that once I transpose the fang_cut_columns.txt I'd have a hard time extracting the teosinte and maize, so I'll extract these two first into two files.
+											#### I could transpose at this point, but it seems to me that once I transpose the fang_cut_columns.txt I'd have a hard time extracting the teosinte and maize, so I'll extract these two first into two files.
 
-$ grep Group fang_cut_columns.txt > header_only.txt					####I know that "Group" is in the header, and I want to keep the header, so I grep out this line to combine with other files later. Alternatively, I could have used $ cut -f 2 fang_cut_columns.txt | head -n 2
+$ grep Group fang_cut_columns.txt > header_only.txt					#### I know that "Group" is in the header, and I want to keep the header, so I grep out this line to combine with other files later. Alternatively, I could have used $ cut -f 2 fang_cut_columns.txt | head -n 2
 
-$ grep ZMMIL fang_cut_columns.txt > ZMMIL.txt						####Since the assignment asked for different orders of the varieties, and I don't know where the row started for each variety, I grep the three kinds of maize (and also for teosinte) and output them to new files, then cat them together
+$ grep ZMMIL fang_cut_columns.txt > ZMMIL.txt						#### Since the assignment asked for different orders of the varieties, and I don't know where the row started for each variety, I grep the three kinds of maize (and also for teosinte) and output them to new files, then cat them together
 $ grep ZMMLR fang_cut_columns.txt > ZMMLR.txt
 $ grep ZMMMR fang_cut_columns.txt > ZMMMR.txt
 
@@ -36,31 +36,31 @@ $ grep ZMPJA fang_cut_columns.txt > ZMPJA.txt
 $ cat header_only.txt zmpba.txt zmpil.txt zmpja.txt > teosinte.txt
 
 
-$ awk -f transpose.awk maize.txt > transposed_maize.txt					####The next step is to transpose the maize and teosinte files
+$ awk -f transpose.awk maize.txt > transposed_maize.txt					#### The next step is to transpose the maize and teosinte files
 $ awk -f transpose.awk teosinte.txt > transposed_teosinte.txt
 
-$ sort -k1,1 snp_positions_cut_columns.txt >sorted_snp_positions_cut_columns.txt	####sort the files to be joined
+$ sort -k1,1 snp_positions_cut_columns.txt >sorted_snp_positions_cut_columns.txt	#### sort the files to be joined
 $ sort -k1,1 transposed_maize.txt >sorted_transposed_maize.txt
 
-											####Next step is to join the transposed maize or teosinte to the snp position file	
+											#### Next step is to join the transposed maize or teosinte to the snp position file	
 $ join --header -t $'\t' -1 1 -2 1 sorted_snp_positions_cut_columns.txt sorted_transposed_maize.txt > joined_maize.txt
 $ head -n1 joined_maize.txt								
 $ join --header -t $'\t' -1 1 -2 1 sorted_snp_positions_cut_columns.txt sorted_transposed_teosinte.txt > joined_teosinte.txt
-$ head -n1 joined_maize.txt								####checked the order of a couple data points, seems correct. 
+$ head -n1 joined_maize.txt								#### checked the order of a couple data points, seems correct. 
 
 
-$ sort -k2n,2 -k1,1 joined_maize.txt > sorted_maize.txt					####sorted the joined_maize.txt by alphanumeric order of chromosome (which is second column) first (-k2n,2) and second column is both start and end key. Then this is sorted by first column alphabetically.
-$ sort -k2n,2 -k1,1 joined_teosinte.txt > sorted_teosinte.txt				####sorted joined_teosinte.txt
+$ sort -k2n,2 -k1,1 joined_maize.txt > sorted_maize.txt					#### sorted the joined_maize.txt by alphanumeric order of chromosome (which is second column) first (-k2n,2) and second column is both start and end key. Then this is sorted by first column alphabetically.
+$ sort -k2n,2 -k1,1 joined_teosinte.txt > sorted_teosinte.txt				#### sorted joined_teosinte.txt
 
-$ sort -k2nr,2 -k1,1 joined_maize.txt > reverse_sorted_maize.txt			####reverse sorted joined_maize.txt
-$ sort -k2nr,2 -k1,1 joined_teosinte.txt > reverse_sorted_teosinte.txt			####reverse sorted joined_teosinte.txt
+$ sort -k2nr,2 -k1,1 joined_maize.txt > reverse_sorted_maize.txt			#### reverse sorted joined_maize.txt
+$ sort -k2nr,2 -k1,1 joined_teosinte.txt > reverse_sorted_teosinte.txt			#### reverse sorted joined_teosinte.txt
 
 
-$ sed "s^?/?^??^g" sorted_maize.txt > sed_maize.txt					####replace all ?/? with ?? in sorted_maize.txt
-$ sed "s^?/?^??^g" sorted_teosinte.txt > sed_teosinte.txt				####replace all ?/? with ?? in sorted_teosinte.txt
+$ sed "s^?/?^??^g" sorted_maize.txt > sed_maize.txt					#### replace all ?/? with ?? in sorted_maize.txt
+$ sed "s^?/?^??^g" sorted_teosinte.txt > sed_teosinte.txt				#### replace all ?/? with ?? in sorted_teosinte.txt
 
-$ sed "s^?/?^--^g" reverse_sorted_maize.txt > sed_reverse_maize.txt			####replace all ?/? with -- in reverse_sorted_maize.txt
-$ sed "s^?/?^--^g" reverse_sorted_teosinte.txt > sed_reverse_teosinte.txt		####replace all ?/? with -- in reverse_sorted_teosinte.txt
+$ sed "s^?/?^--^g" reverse_sorted_maize.txt > sed_reverse_maize.txt			#### replace all ?/? with -- in reverse_sorted_maize.txt
+$ sed "s^?/?^--^g" reverse_sorted_teosinte.txt > sed_reverse_teosinte.txt		#### replace all ?/? with -- in reverse_sorted_teosinte.txt
 
 
 ####grep out each chromosomes in the four sed files. 
